@@ -50,12 +50,12 @@ router.get('/:id', async (req, res) => {
 });
 
 //update user
-router.put('/:id', (req, res) => {
+router.put('/:id', async (req, res) => {
     const { id } = req.params;
     const { email, name, address, phone, image, paymentMethod, password } = req.body;
 
     try {
-        const result = prisma.user.update({
+        const result = await prisma.user.update({
             where: {
                 id: Number(id),
             },
