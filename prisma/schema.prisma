@@ -1,0 +1,60 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            Int     @id @default(autoincrement())
+  email         String  @unique
+  name          String?
+  address       String
+  phone         String
+  image         String?
+  paymentMethod String
+  password      String
+
+  parcel    Parcel[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Dispatcher {
+  id             Int      @id @default(autoincrement())
+  email          String   @unique
+  name           String
+  password       String
+  address        String
+  phone          String
+  image          String?
+  isActive       Boolean  @default(false)
+  warningCount   Int      @default(0)
+  dispatchMethod String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Parcel {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+  name        String
+  description String
+  weight      String
+  height      String?
+  width       String?
+  length      String?
+  pickupTime  String
+  fragile     Boolean
+  dueTime     String
+  price       String
+  image       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
