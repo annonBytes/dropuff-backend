@@ -11,50 +11,209 @@ datasource db {
 }
 
 model User {
-  id            Int     @id @default(autoincrement())
-  email         String  @unique
-  name          String?
-  address       String
-  phone         String
-  image         String?
-  paymentMethod String
-  password      String
+  id      Int     @id @default(autoincrement())
+  email   String  @unique
+  name    String?
+  address String?
+  phone   String?
+  image   String?
 
-  parcel    Parcel[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  parcel  Parcel[]
+  token   token[]
+  order   Order[]
+  rating  Rating[]
+  bonus   Bonus[]
+  payment Payment[]
 }
 
 model Dispatcher {
   id             Int      @id @default(autoincrement())
   email          String   @unique
-  name           String
-  password       String
-  address        String
-  phone          String
+  name           String?
+  address        String?
+  phone          String?
   image          String?
   isActive       Boolean  @default(false)
   warningCount   Int      @default(0)
-  dispatchMethod String
+  dispatchMethod String   @default("")
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+
+  // Additional fields for dispatcher attributes and selection criteria
+  transportationMode String?
+  proximity          String?
+
+  order   Order[]
+  bonus   Bonus[]
+  rating  Rating[]
+  payment Payment[]
+  target  Target[]
+  wallet  Wallet[]
 }
 
 model Parcel {
   id          Int      @id @default(autoincrement())
-  userId      Int
-  user        User     @relation(fields: [userId], references: [id])
-  name        String
-  description String
-  weight      String
+  orderId     Int
+  order       Order?   @relation("OrderToParcel", fields: [orderId], references: [id])
+  type        String?
+  description String?
+  weight      String?
   height      String?
   width       String?
   length      String?
-  pickupTime  String
-  fragile     Boolean
-  dueTime     String
-  price       String
+  fragile     Boolean  @default(false)
   image       String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  User        User?    @relation(fields: [userId], references: [id])
+  userId      Int?
+}
+
+model token {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  type       String
+  emailToken String?  @unique
+  valid      Boolean  @default(true)
+  expires    DateTime
+}
+
+model Order {
+  id           Int         @id @default(autoincrement())
+  userId       Int
+  user         User        @relation(fields: [userId], references: [id])
+  dispatcherId Int?
+  dispatcher   Dispatcher? @relation(fields: [dispatcherId], references: [id])
+
+  parcels     Parcel[] @relation("OrderToParcel")
+  pickupTime  String
+  dropoffTime String?
+
+  customerNotified Boolean  @default(false)
+  doubleCheck      Boolean  @default(false)
+  startLocation    String?
+  endLocation      String?
+  status           String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  location        Location[]
+  notification    Notification[]
+  rating          Rating[]
+  bonus           Bonus[]
+  chat            Chat[]
+  payment         Payment[]
+  dispatchMessage DispatchMessage[]
+}
+
+model Location {
+  id        Int      @id @default(autoincrement())
+  orderId   Int
+  order     Order    @relation(fields: [orderId], references: [id])
+  latitude  String
+  longitude String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  orderId   Int
+  order     Order    @relation(fields: [orderId], references: [id])
+  message   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Rating {
+  id            Int         @id @default(autoincrement())
+  orderId       Int
+  order         Order       @relation(fields: [orderId], references: [id])
+  user          User        @relation(fields: [userId], references: [id])
+  userId        Int
+  ratingValue   Int
+  reviewMessage String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  Dispatcher    Dispatcher? @relation(fields: [dispatcherId], references: [id])
+  dispatcherId  Int?
+}
+
+model Bonus {
+  id           Int      @id @default(autoincrement())
+  orderId      Int
+  order        Order    @relation(fields: [orderId], references: [id])
+  dispatcherId Int
+  userId       Int
+  bonusAmount  Float
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user       User       @relation(fields: [userId], references: [id])
+  dispatcher Dispatcher @relation(fields: [dispatcherId], references: [id])
+}
+
+model Chat {
+  id        Int      @id @default(autoincrement())
+  orderId   Int
+  order     Order    @relation(fields: [orderId], references: [id])
+  message   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Payment {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  dispatcherId Int
+  orderId      Int
+  order        Order    @relation(fields: [orderId], references: [id])
+  amount       Float
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user       User       @relation(fields: [userId], references: [id])
+  dispatcher Dispatcher @relation(fields: [dispatcherId], references: [id])
+}
+
+model Target {
+  id             Int      @id @default(autoincrement())
+  dispatcherId   Int
+  targetAmount   String
+  acheivedAmount String
+  startDate      DateTime
+  endDate        DateTime
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  dispatcher Dispatcher @relation(fields: [dispatcherId], references: [id])
+}
+
+model DispatchMessage {
+  id         Int      @id @default(autoincrement())
+  deliveryId Int
+  sender     String
+  message    String
+  timestamp  DateTime @default(now())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  order Order @relation(fields: [deliveryId], references: [id])
+}
+
+//walllet for only dispatcher that can be withdrawn
+model Wallet {
+  id           Int        @id @default(autoincrement())
+  dispatcherId Int
+  dispatcher   Dispatcher @relation(fields: [dispatcherId], references: [id])
+  amount       Float
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 }

@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 
  //create user
  router.post('/', async (req, res) => {
-    const { email, name, address, phone, image, paymentMethod, password } = req.body;
+    const { email, name, address, phone, image, paymentMethod } = req.body;
     //console.log(email, name, address, phone, image, paymentMethod, password);
 
 try {
@@ -19,7 +19,6 @@ try {
                 phone,
                 image,
                 paymentMethod,
-                password  
             },  
         });
         res.json(result);
@@ -32,9 +31,9 @@ try {
 
 //get user
 router.get('/', async (req, res) => {
-    const allUsers = await prisma.user.findMany();
+    const allUsers = await prisma.user.findMany({ select: {id: true, name: true, email: true, address: true, phone: true, image: true, paymentMethod: true}});    
+    // const allMyUsers = await prisma.user.findMany({include: {parcel: true}}); *this includes a portion to the json response*
     res.json(allUsers);
-    //res.status(501).json({error: 'Not implemented'});
 });
 
 //get one user
@@ -66,7 +65,6 @@ router.put('/:id', async (req, res) => {
                 phone,
                 image,
                 paymentMethod,
-                password  
             },  
         });
         res.json(result);

@@ -8,7 +8,7 @@ const prisma = new PrismaClient();
 
 //create dispatcher
 router.post('/', async (req, res) => {
-    const { email, name, address, phone, image, isActive, dispatchMethod, password } = req.body;
+    const { email, name, address, phone, image, isActive, dispatchMethod } = req.body;
     
     try {
        const result = await prisma.dispatcher.create({
@@ -20,7 +20,6 @@ router.post('/', async (req, res) => {
                 image,
                 isActive,
                 dispatchMethod,
-                password
             },
         });  
     res.json(result);
@@ -70,7 +69,6 @@ router.put('/:id', async (req, res) => {
                 image,
                 isActive,
                 dispatchMethod,
-                password
             },
         });
         res.json(result);
