@@ -5,38 +5,58 @@ const router = Router();
 const prisma = new PrismaClient();
 
 //create an order with a parcel
-router.post('/parcel', async (req, res) => {
-    const { type, weight, height, width, length, description, fragile, price, image, dispatcherId, status, userId, pickupTime, startLocation, } = req.body;
+router.post('/', async (req, res) => {
+    const { type, weight, height, width, length, description, fragile, image, userId, pickupTime, startLocation, parcels } = req.body;
 
     try {
-        const result = await prisma.order.create({
-            data: {
-                parcels: {
-                    create: {
-                        type,
-                        weight,
-                        height,
-                        width,
-                        length,
-                        description,
-                        fragile,
-                        image,
-                    },
+        //start a Prisma Transaction
+        await prisma.$transaction(async (prisma) => {
+            // Create the order first
+            const order = await prisma.order.create({
+                data: {
+                    user: { connect: { id: userId } },
+                    status: 'requested',
+                    pickupTime,
+                    startLocation,
                 },
-                dispatcher: { connect: { id: dispatcherId } },
-                user: { connect: { id: userId } },
-                status: 'requested',
-                pickupTime,
-                startLocation,
-            },
+            });
+
+        // Create parcels associated with the order
+            for (const parcelData of parcels) {
+                const parcel = await prisma.parcel.create({
+                data: {
+                    ...parcelData,
+                    orderId: order.id, // Set the orderId to the id of the newly created order
+                    userId,
+                },
+                });
+
+            // Update the Parcel table with the attributes obtained from the request
+            await prisma.parcel.update({
+                where: {
+                    id: parcel.id,
+                },
+                data: {
+                    type: parcelData.type,
+                    weight: parcelData.weight,
+                    height: parcelData.height,
+                    width: parcelData.width,
+                    length: parcelData.length,
+                    description: parcelData.description,
+                    fragile: parcelData.fragile,
+                    image: parcelData.image,
+                    userId
+                },
+            });
+        }           
+            // Return the order as the response
+            res.status(201).json(order);
         });
-        res.status(201).json(result);
     } catch (error) {
         res.status(500).json({error: 'Internal server error'});
         console.log(error);
     }
 });
-
 
 //get all orders
 router.get('/', async (req, res) => {

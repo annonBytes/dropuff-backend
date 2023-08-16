@@ -18,7 +18,6 @@ try {
                 address,
                 phone,
                 image,
-                paymentMethod,
             },  
         });
         res.json(result);
@@ -31,7 +30,7 @@ try {
 
 //get user
 router.get('/', async (req, res) => {
-    const allUsers = await prisma.user.findMany({ select: {id: true, name: true, email: true, address: true, phone: true, image: true, paymentMethod: true}});    
+    const allUsers = await prisma.user.findMany({ select: {id: true, name: true, email: true, address: true, phone: true, image: true,}});    
     // const allMyUsers = await prisma.user.findMany({include: {parcel: true}}); *this includes a portion to the json response*
     res.json(allUsers);
 });
@@ -51,7 +50,7 @@ router.get('/:id', async (req, res) => {
 //update user
 router.put('/:id', async (req, res) => {
     const { id } = req.params;
-    const { email, name, address, phone, image, paymentMethod, password } = req.body;
+    const { email, name, address, phone, image, } = req.body;
 
     try {
         const result = await prisma.user.update({
@@ -64,7 +63,6 @@ router.put('/:id', async (req, res) => {
                 address,
                 phone,
                 image,
-                paymentMethod,
             },  
         });
         res.json(result);
